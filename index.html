@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fundamentals of Software Engineering — Git & GitHub</title>
+<style>
+:root{
+ --bg:#202525;--panel:#292f2f;--panel2:#323a39;--text:#f5f7f5;--muted:#c2cbc7;
+ --lime:#a8cf32;--lime2:#8db52a;--cyan:#69cfe0;--green:#159b61;--line:#46504d;
+ --red:#ff7777;--yellow:#f3cf69;--shadow:0 18px 55px #0007;
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth}
+body{margin:0;background:#151a19;color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif;overflow:hidden}
+button,input{font:inherit}
+button{cursor:pointer}
+.deck{height:100vh;width:100vw;display:flex;align-items:center;justify-content:center;padding:24px}
+.slide{display:none;position:relative;width:min(1440px,96vw);height:min(810px,92vh);min-height:560px;background:var(--bg);border:1px solid #3a4541;box-shadow:var(--shadow);overflow:hidden;padding:clamp(24px,4vw,58px);padding-bottom:78px}
+.slide.active{display:flex;flex-direction:column;animation:appear .22s ease}
+@keyframes appear{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
+.topline{position:absolute;top:0;left:0;height:7px;width:100%;background:linear-gradient(90deg,var(--lime),#159b61,var(--cyan))}
+.kicker{color:var(--lime);font-weight:800;text-transform:uppercase;letter-spacing:.2em;font-size:clamp(10px,1vw,14px);margin-bottom:12px}
+h1{font-size:clamp(38px,6vw,76px);line-height:1.02;letter-spacing:-.04em;margin:0 0 18px;font-weight:900}
+h2{font-size:clamp(29px,4vw,48px);line-height:1.06;letter-spacing:-.03em;margin:0 0 18px}
+h3{font-size:clamp(18px,2vw,25px);margin:0 0 10px}
+p{color:var(--muted);font-size:clamp(15px,1.35vw,20px);line-height:1.5;margin:8px 0}
+strong{color:#fff}.lime{color:var(--lime)}.cyan{color:var(--cyan)}
+.subtitle{font-size:clamp(18px,2vw,26px);color:var(--lime);font-weight:800}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:stretch}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:20px}
+.card p{font-size:clamp(14px,1.2vw,17px)}
+.callout{border-left:4px solid var(--lime);background:#a8cf3212;padding:14px 18px;border-radius:0 10px 10px 0;margin-top:14px}
+.tag{display:inline-block;padding:6px 10px;border:1px solid #60705d;border-radius:99px;color:var(--lime);font-size:12px;font-weight:800;letter-spacing:.06em;margin:3px}
+ul,ol{color:var(--muted);font-size:clamp(15px,1.3vw,19px);line-height:1.55;padding-left:1.25em}
+li{margin:7px 0} code,pre,.mono{font-family:Consolas,Monaco,monospace}
+code{color:#b8e5a0;background:#161d1b;padding:2px 6px;border-radius:5px}
+pre{white-space:pre-wrap;word-break:break-word;background:#111715;border:1px solid #3d4944;border-radius:12px;padding:16px;color:#d8f0d2;font-size:clamp(12px,1.05vw,15px);line-height:1.5;overflow:auto}
+.diagram{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:18px 0}
+.node{background:#303937;border:2px solid var(--lime);padding:16px;border-radius:12px;text-align:center;min-width:145px;flex:1}
+.arrow{font-size:26px;color:var(--cyan);font-weight:900}
+.small{font-size:13px;color:var(--muted)}
+.footer{position:absolute;bottom:0;left:0;right:0;height:58px;background:#191f1e;border-top:1px solid #38413e;display:flex;align-items:center;justify-content:space-between;padding:0 26px;color:#aab5b0;font-size:13px}
+.progress{height:4px;position:absolute;bottom:58px;left:0;background:var(--lime);width:0;transition:width .2s}
+.nav{position:fixed;bottom:12px;right:18px;display:flex;gap:8px;z-index:20}
+.nav button,.action{background:var(--lime);color:#172015;border:0;border-radius:8px;padding:10px 15px;font-weight:800}
+.nav button.secondary,.action.secondary{background:#394340;color:#fff;border:1px solid #59635f}
+.nav button:disabled{opacity:.35;cursor:not-allowed}
+.counter{position:fixed;bottom:19px;left:20px;color:#d1dbd5;font-size:13px;z-index:20}
+.toolbar{position:fixed;top:12px;right:18px;display:flex;gap:8px;z-index:20}
+.toolbar button{background:#29312f;color:#fff;border:1px solid #59635f;border-radius:8px;padding:8px 11px}
+.presenter{display:none;position:absolute;right:20px;top:20px;max-width:340px;max-height:55%;overflow:auto;background:#121817;border:1px solid var(--cyan);border-radius:10px;padding:14px;z-index:5}
+.presenter.show{display:block}.presenter h4{margin:0 0 8px;color:var(--cyan)}
+.terminal{background:#0e1412;border:1px solid #48554f;border-radius:13px;overflow:hidden}
+.termhead{padding:9px 14px;background:#27302c;color:#b9c5be;font-size:12px;display:flex;justify-content:space-between}
+.termout{height:245px;overflow:auto;padding:14px;font:14px/1.55 Consolas,monospace;color:#d9e9df;white-space:pre-wrap}
+.termline{display:flex;align-items:center;border-top:1px solid #34413a;padding:9px 12px;gap:8px}
+.termline span{color:var(--lime);font:13px Consolas}
+.termline input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:white;font:14px Consolas}
+.termline button{background:var(--lime);border:0;border-radius:6px;padding:7px 12px;font-weight:800}
+.pillrow{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+.pillrow button{background:#394340;color:#e7f0e9;border:1px solid #56635d;padding:7px 10px;border-radius:8px;font-size:12px}
+.pillrow button:hover{border-color:var(--lime);color:var(--lime)}
+.table{width:100%;border-collapse:collapse;font-size:clamp(13px,1.15vw,16px)}
+.table th,.table td{border-bottom:1px solid #45504b;padding:10px;text-align:left;vertical-align:top}
+.table th{color:var(--lime)}
+.branchviz{display:flex;flex-direction:column;gap:13px;background:#151c19;border-radius:12px;padding:18px}
+.lane{display:flex;align-items:center;gap:8px;min-height:43px;border-bottom:1px dashed #46534b;padding-bottom:8px}
+.lane label{width:88px;color:var(--cyan);font-weight:800;font-size:13px}
+.commit{width:32px;height:32px;border-radius:50%;background:var(--lime);color:#192018;display:grid;place-items:center;font-weight:900;position:relative;z-index:1}
+.commit.alt{background:var(--cyan)}.commit.merged{background:#e6c568}
+.line{height:3px;background:#68776c;min-width:25px;flex:1;max-width:70px}
+.quizopt{display:block;width:100%;text-align:left;background:#303936;color:white;border:1px solid #56615b;border-radius:9px;padding:11px 14px;margin:8px 0}
+.quizopt:hover{border-color:var(--lime)}.feedback{min-height:30px;color:var(--lime);font-weight:700;margin-top:8px}
+details{background:#252d2a;border:1px solid #46524c;border-radius:10px;padding:12px 15px;margin:8px 0;color:var(--muted)}
+summary{cursor:pointer;color:#fff;font-weight:800}
+.timeline{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0}
+.timebox{background:#2a332f;border-top:4px solid var(--lime);padding:14px;border-radius:8px}
+.timebox b{display:block;color:var(--lime);font-size:20px;margin-bottom:6px}
+.cover{justify-content:center!important;text-align:center;align-items:center}
+.cover .brandrow{display:flex;align-items:center;gap:16px;text-align:left;margin-bottom:30px}
+.logo{width:68px;height:68px;border-radius:50%;border:3px solid var(--lime);display:grid;place-items:center;color:var(--lime);font-weight:900;font-size:20px}
+.cover h1{max-width:950px}.cover .subtitle{margin-top:4px}
+.cover .speaker{margin-top:36px;color:var(--cyan);font-weight:800}
+.two-col-list{columns:2;column-gap:40px}
+@media(max-width:800px){
+ body{overflow:auto}.deck{height:auto;min-height:100vh;padding:8px;display:block}.slide{width:100%;height:auto;min-height:calc(100vh - 16px);padding:28px 20px 86px}.grid2,.grid3{grid-template-columns:1fr}.timeline{grid-template-columns:1fr 1fr}.footer{position:absolute}.nav{bottom:8px;right:8px}.counter{bottom:16px}.toolbar{top:7px;right:7px}.termout{height:210px}.two-col-list{columns:1}
+}
+@media print{body{overflow:visible;background:white}.deck{display:block;height:auto;padding:0}.slide{display:flex!important;page-break-after:always;width:100%;height:100vh;box-shadow:none}.nav,.toolbar,.counter{display:none}}
+</style>
+</head>
+<body>
+<div class="toolbar">
+ <button onclick="toggleNotes()">Presenter notes</button>
+ <button onclick="toggleOverview()">Slide overview</button>
+ <button onclick="window.print()">Print / PDF</button>
+</div>
+<div class="counter" id="counter">01 / 24</div>
+<div class="deck" id="deck">
+
+<section class="slide active cover" data-title="Welcome" data-notes="Welcome the group. Ask who has used Git, GitHub, or both. Make it clear that this is a practical session: learners will type commands, predict outcomes, and explain what changed.">
+ <div class="topline"></div>
+ <div class="brandrow"><div class="logo">H</div><div><div class="kicker">DEKUT-HRIC PRESENTS</div><strong>Dedan Kimathi University of Technology</strong><br><span style="color:var(--muted)">Health Research & Innovation Club</span></div></div>
+ <div class="kicker">ONLINE TRAINING SESSION · SUBTOPIC 2</div>
+ <h1>INTRODUCTION TO <span class="lime">GIT & GITHUB</span></h1>
+ <div class="subtitle">Fundamentals of Software Engineering in Prototype Development</div>
+ <p style="max-width:780px">A practical guide to tracking code, working safely, and collaborating without overwriting each other's work.</p>
+ <div class="speaker">PAUL MUYALI · DIGITAL SYSTEMS & TECHNOLOGY, DeKUT-HRIC</div>
+ <div class="tag">LOCAL GIT</div><div class="tag">BRANCHING</div><div class="tag">GITHUB COLLABORATION</div>
+</section>
+
+<section class="slide" data-title="The destination" data-notes="Set expectations. The goal is not memorising every command. It is understanding the workflow and knowing how to look up the exact command safely.">
+ <div class="topline"></div><div class="kicker">01 · Learning outcomes</div><h2>By the end, you should be able to…</h2>
+ <div class="grid2">
+  <div class="card"><h3 class="lime">Work locally</h3><ul><li>Explain Git vs GitHub.</li><li>Create folders and files from a terminal.</li><li>Track changes through working, staging, and commit areas.</li><li>Read status, differences, and commit history.</li></ul></div>
+  <div class="card"><h3 class="cyan">Work with a team</h3><ul><li>Create branches and merge changes.</li><li>Connect a local project to GitHub.</li><li>Push, pull, and resolve a simple conflict.</li><li>Use Issues and Pull Requests to coordinate work.</li></ul></div>
+ </div>
+ <div class="callout"><strong>Success looks like this:</strong> you can explain where your code is, what has been saved, and how a teammate can safely receive your changes.</div>
+</section>
+
+<section class="slide" data-title="Session plan" data-notes="For a one-hour session, prioritise phases 1–3 and the guided exercise. For two hours, include conflict practice, recovery commands, and the final team workflow.">
+ <div class="topline"></div><div class="kicker">Choose your pace</div><h2>A 1–2 hour teaching plan</h2>
+ <div class="timeline">
+  <div class="timebox"><b>0–10 min</b><strong>Why version control?</strong><p>Git vs GitHub, mental model</p></div>
+  <div class="timebox"><b>10–35 min</b><strong>Local Git</strong><p>Terminal, snapshots, staging, commits</p></div>
+  <div class="timebox"><b>35–55 min</b><strong>Branches</strong><p>Feature work, merge, conflicts</p></div>
+  <div class="timebox"><b>55–75 min</b><strong>GitHub</strong><p>Remotes, push/pull, PRs, Issues</p></div>
+ </div>
+ <div class="grid2">
+  <div class="card"><h3 class="lime">For 60 minutes</h3><p>Use the first four blocks, then a 5-minute recap. Mention recovery and automation as a preview.</p></div>
+  <div class="card"><h3 class="cyan">For 120 minutes</h3><p>Add 15 minutes for conflict practice, 10 minutes for recovery commands, 10 minutes for GitHub workflow, and 10 minutes for a team challenge.</p></div>
+ </div>
+</section>
+
+<section class="slide" data-title="The problem" data-notes="Ask: Have you ever named files final, final2, final-really-final? What happens when two people edit the same project? Explain that version control gives a reliable history and collaboration rules.">
+ <div class="topline"></div><div class="kicker">Start with the problem</div><h2>What happens without version control?</h2>
+ <div class="grid2">
+  <div class="card"><h3 style="color:var(--red)">The folder-copy method</h3><pre>prototype/
+prototype-final/
+prototype-final2/
+prototype-final-PAUL/
+prototype-final-USE-THIS/</pre><p>Which one is correct? Who changed what? Can we safely go back?</p></div>
+  <div class="card"><h3 class="lime">The Git method</h3><pre>Project history
+● Add login screen
+● Fix validation bug
+● Add patient dashboard
+● Update README</pre><p>One project folder. A timeline of meaningful snapshots. A way to compare and restore work.</p></div>
+ </div>
+ <div class="callout">Think of Git as <strong>save points in a game</strong>—but each save can include a message explaining what changed.</div>
+</section>
+
+<section class="slide" data-title="Git vs GitHub" data-notes="Emphasise the distinction: Git is software running locally; GitHub is a hosted service that stores Git repositories and adds collaboration features. Git can be used without GitHub.">
+ <div class="topline"></div><div class="kicker">The two names</div><h2>Git is not GitHub</h2>
+ <div class="grid2">
+  <div class="card"><div class="kicker">Git</div><h3 class="lime">The version-control tool</h3><p>Installed on your computer. Records project history, compares changes, creates branches, and merges work.</p><div class="tag">LOCAL</div><div class="tag">COMMAND LINE</div><div class="tag">HISTORY</div></div>
+  <div class="card"><div class="kicker">GitHub</div><h3 class="cyan">The collaboration platform</h3><p>Hosts Git repositories online and adds Pull Requests, Issues, reviews, project boards, Actions, and access controls.</p><div class="tag">CLOUD HOSTING</div><div class="tag">TEAMWORK</div><div class="tag">AUTOMATION</div></div>
+ </div>
+ <div class="diagram"><div class="node"><strong>Your laptop</strong><br><span class="small">Git repository</span></div><div class="arrow">⇄</div><div class="node"><strong>GitHub</strong><br><span class="small">Remote repository</span></div></div>
+ <p class="small">Analogy: Git is the camera that records versions; GitHub is the shared online album and team workspace.</p>
+</section>
+
+<section class="slide" data-title="GitHub map" data-notes="Walk through these structures. Repository is the project home. Files/folders hold code. README explains the project. Issues track work. Pull Requests propose changes. Actions automate checks. Releases package versions. Settings control access.">
+ <div class="topline"></div><div class="kicker">Explore the GitHub interface</div><h2>What lives inside a GitHub repository?</h2>
+ <div class="grid3">
+  <div class="card"><h3 class="lime">Repository</h3><p>The project container: code, history, branches, and collaboration settings.</p></div>
+  <div class="card"><h3 class="cyan">README</h3><p>The front page: what the project does, how to install and run it, and how to contribute.</p></div>
+  <div class="card"><h3 class="lime">Issues</h3><p>A task or problem tracker: bugs, feature requests, questions, and assigned work.</p></div>
+  <div class="card"><h3 class="cyan">Pull Requests</h3><p>A proposal to bring changes from one branch into another, with discussion and review.</p></div>
+  <div class="card"><h3 class="lime">Actions</h3><p>Automated jobs such as running tests or deploying after a change.</p></div>
+  <div class="card"><h3 class="cyan">Releases</h3><p>Named project versions shared with users, often with notes and downloadable files.</p></div>
+ </div>
+ <div class="callout">Other useful areas: <strong>Projects</strong> (organise tasks), <strong>Wiki</strong> (longer documentation), <strong>Insights</strong> (activity), and <strong>Settings</strong> (permissions and configuration).</div>
+</section>
+
+<section class="slide" data-title="Public and private" data-notes="Public means anyone can view the repository. Private means only invited/authorised people can access it. Visibility does not make secrets safe: never commit API keys, passwords, patient data, or private keys. Public repositories can still have contribution permissions controlled by maintainers.">
+ <div class="topline"></div><div class="kicker">Repository visibility</div><h2>Public vs private repositories</h2>
+ <div class="grid2">
+  <div class="card"><h3 class="lime">Public</h3><p>Anyone can view the code and history.</p><ul><li>Good for open-source projects, portfolios, and public demos.</li><li>Others can inspect and may fork it.</li><li>Only authorised collaborators can push directly.</li></ul></div>
+  <div class="card"><h3 class="cyan">Private</h3><p>Access is limited to you and people you invite.</p><ul><li>Good for work in progress or restricted source code.</li><li>Useful for team projects before public release.</li><li>Members need appropriate permissions.</li></ul></div>
+ </div>
+ <div class="callout"><strong>Important:</strong> private does not mean encrypted storage for secrets. If a key or password is committed, treat it as exposed: revoke/rotate it. Removing it in a later commit does not erase the old history.</div>
+</section>
+
+<section class="slide" data-title="Install and configure" data-notes="On Windows, install Git for Windows and use Git Bash or PowerShell. On macOS use the installer/Homebrew; on Linux use the distribution package manager. Verify with git --version. Git config user.name/email identifies commits; it is not necessarily your GitHub login.">
+ <div class="topline"></div><div class="kicker">Phase 1 · Setup</div><h2>Install Git and introduce yourself</h2>
+ <div class="grid2">
+  <div><h3>1. Install and verify</h3><pre>git --version</pre><p>Download Git from <a href="https://git-scm.com/downloads" target="_blank" style="color:var(--cyan)">git-scm.com/downloads</a>.</p><h3>2. Configure your identity</h3><pre>git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+git config --global init.defaultBranch main</pre></div>
+  <div class="card"><h3 class="lime">What do these settings do?</h3><ul><li><code>user.name</code>: name attached to your commits.</li><li><code>user.email</code>: email attached to your commits.</li><li><code>init.defaultBranch</code>: branch name used when starting a new repository.</li><li><code>--global</code>: applies to your user account on this computer.</li></ul><pre>git config --global --list</pre></div>
+ </div>
+ <div class="callout">A commit is not automatically uploaded to GitHub. At this point, everything is still on your computer.</div>
+</section>
+
+<section class="slide" data-title="Terminal basics" data-notes="Explain that the terminal is a text-based way to give instructions to the computer. Commands differ slightly between shells. The examples here work in Git Bash; PowerShell supports most of the same commands but touch and some Unix commands may differ. Use the built-in demo terminal on the next slide to practise the basic file commands.">
+ <div class="topline"></div><div class="kicker">Before Git: move around</div><h2>Folders, files, and navigation</h2>
+ <div class="grid2">
+  <div><table class="table"><tr><th>Command</th><th>Meaning</th></tr><tr><td><code>pwd</code></td><td>Show current folder</td></tr><tr><td><code>ls</code></td><td>List files and folders</td></tr><tr><td><code>cd folder</code></td><td>Enter a folder</td></tr><tr><td><code>cd ..</code></td><td>Go up one level</td></tr><tr><td><code>mkdir app</code></td><td>Create a folder</td></tr><tr><td><code>touch README.md</code></td><td>Create an empty file (Git Bash/macOS/Linux)</td></tr><tr><td><code>cat README.md</code></td><td>Read file content</td></tr></table></div>
+  <div><h3 class="cyan">A simple project structure</h3><pre>health-app/
+├── README.md
+├── .gitignore
+├── frontend/
+│   └── src/
+└── backend/
+    └── src/</pre><p>Folders organise files. A project repository usually starts at the top-level project folder.</p></div>
+ </div>
+</section>
+
+<section class="slide" data-title="Live terminal" data-notes="This is a safe simulated terminal, not your computer's real shell. Demonstrate mkdir, cd, touch, echo, cat, ls, pwd, then git init/status/add/commit. Let a learner predict the output before pressing Run. Use Reset to start again.">
+ <div class="topline"></div><div class="kicker">Live demo · Try commands</div><h2>Let's build a tiny project</h2>
+ <p>Type a command or use the quick examples. This teaching terminal simulates a small file system and Git repository in this page.</p>
+ <div class="pillrow">
+  <button onclick="quick('pwd')">pwd</button><button onclick="quick('mkdir health-app')">mkdir health-app</button><button onclick="quick('cd health-app')">cd health-app</button><button onclick="quick('touch README.md')">touch README.md</button><button onclick="quick('echo # Health App > README.md')">write README</button><button onclick="quick('cat README.md')">cat README</button><button onclick="quick('git init')">git init</button><button onclick="quick('git status')">git status</button><button onclick="quick('git add README.md')">git add</button><button onclick="quick('git commit -m "first commit"')">commit</button>
+ </div>
+ <div class="terminal">
+  <div class="termhead"><span>DEKUT-HRIC · simulated Git Bash</span><span id="termPath">~</span></div>
+  <div class="termout" id="termout">Welcome! Try <b>pwd</b>, then create a folder with <b>mkdir health-app</b>.<br>Tip: type <b>help</b> to see supported commands.</div>
+  <div class="termline"><span id="prompt">~ $</span><input id="cmd" autocomplete="off" spellcheck="false" placeholder="Type a command, e.g. mkdir health-app"><button onclick="runCmd()">Run ↵</button></div>
+ </div>
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span class="small">Simulated environment · no files are created on your device</span><button class="action secondary" onclick="resetTerm()">Reset demo</button></div>
+</section>
+
+<section class="slide" data-title="Three zones" data-notes="This is the key mental model. Working directory: edits you have made. Staging area: exact changes selected for the next commit. Local repository: committed snapshots. git add stages; git commit records the staged snapshot. git status tells you where things are.">
+ <div class="topline"></div><div class="kicker">The core Git mental model</div><h2>Three places your changes move through</h2>
+ <div class="diagram">
+  <div class="node"><h3>Working directory</h3><p class="small">Your project files. You edit here.</p><span class="tag">EDIT</span></div><div class="arrow">→</div>
+  <div class="node"><h3>Staging area</h3><p class="small">Changes selected for the next save point.</p><span class="tag">git add</span></div><div class="arrow">→</div>
+  <div class="node"><h3>Local repository</h3><p class="small">Committed project snapshots and history.</p><span class="tag">git commit</span></div>
+ </div>
+ <div class="grid2">
+  <div class="card"><h3 class="lime">Why stage first?</h3><p>You may have edited five files but only want two in the next commit. Staging lets you choose exactly what goes into that snapshot.</p></div>
+  <div class="card"><h3 class="cyan">What is a commit?</h3><p>A named snapshot of staged changes, linked to its parent history. It is not just a normal save button.</p></div>
+ </div>
+ <div class="callout">Remember: <strong>edit → add → commit</strong>. Push comes later, when you want to send commits to a remote repository.</div>
+</section>
+
+<section class="slide" data-title="Core commands" data-notes="Run these in order. git status is your dashboard. git diff shows unstaged line changes. git diff --staged shows staged changes. git log --oneline shows concise history. git add . stages changes under the current directory; inspect status before committing.">
+ <div class="topline"></div><div class="kicker">Daily Git commands</div><h2>Your everyday toolkit</h2>
+ <table class="table">
+  <tr><th>Command</th><th>What it does</th><th>When to use it</th></tr>
+  <tr><td><code>git init</code></td><td>Start tracking a folder as a repository</td><td>New local project</td></tr>
+  <tr><td><code>git status</code></td><td>Summarises changed, staged, and untracked files</td><td>Before and after most actions</td></tr>
+  <tr><td><code>git add file</code></td><td>Stage a file's current changes</td><td>Choose what enters next commit</td></tr>
+  <tr><td><code>git add .</code></td><td>Stage changes under current folder</td><td>When you have checked what changed</td></tr>
+  <tr><td><code>git commit -m "message"</code></td><td>Record staged changes</td><td>After completing a meaningful unit</td></tr>
+  <tr><td><code>git diff</code> / <code>git diff --staged</code></td><td>Compare changes</td><td>Review before commit</td></tr>
+  <tr><td><code>git log --oneline</code></td><td>Show commit history</td><td>Understand past work</td></tr>
+ </table>
+</section>
+
+<section class="slide" data-title="Meaningful commits" data-notes="A commit message should describe the change, not the mood or date. Encourage small, focused commits. Examples: Add login form validation; Fix patient record date parsing; Update setup instructions. Avoid 'changes', 'stuff', 'final'.">
+ <div class="topline"></div><div class="kicker">Good habits</div><h2>Make commits that tell a story</h2>
+ <div class="grid2">
+  <div class="card"><h3 class="lime">Good commit messages</h3><ul><li>Add email validation to signup form</li><li>Fix null response in patient search</li><li>Document local development setup</li><li>Add API health-check endpoint</li></ul></div>
+  <div class="card"><h3 style="color:var(--red)">Weak commit messages</h3><ul><li>update</li><li>final version</li><li>changes</li><li>working now</li></ul><p>They do not help teammates understand the project history.</p></div>
+ </div>
+ <div class="callout">A useful rule: one commit should represent one understandable piece of work. Commit often, but keep each commit focused.</div>
+</section>
+
+<section class="slide" data-title="Gitignore" data-notes="Explain that .gitignore tells Git which untracked files to ignore. It does not remove a file already tracked. If a secret was committed, rotate it. Common entries: node_modules/, .env, dist/, coverage/, .DS_Store. Commit .gitignore itself so the team shares the rule.">
+ <div class="topline"></div><div class="kicker">Keep the repository clean</div><h2>What should not enter Git?</h2>
+ <div class="grid2">
+  <div><h3>Example <code>.gitignore</code></h3><pre># Dependencies
+node_modules/
+
+# Environment variables and secrets
+.env
+.env.*
+
+# Build output
+dist/
+build/
+coverage/
+
+# Local editor / OS files
+.DS_Store
+.vscode/</pre></div>
+  <div class="card"><h3 class="lime">Why ignore these?</h3><ul><li>Dependencies can be reinstalled from package files.</li><li>Build output can usually be regenerated.</li><li>Local editor settings may differ by developer.</li><li>Secrets must not be shared through source control.</li></ul><div class="callout"><strong>Warning:</strong> adding a filename to .gitignore does not untrack it if Git already tracks it.</div></div>
+ </div>
+</section>
+
+<section class="slide" data-title="Branches" data-notes="A branch is a movable label pointing to a commit line. It lets a developer work on a feature without changing main immediately. main is not magically safer; teams protect it through review and checks. Create one branch per feature, bug fix, or experiment.">
+ <div class="topline"></div><div class="kicker">Phase 2 · Branching</div><h2>Branches: separate work without copying the project</h2>
+ <div class="grid2">
+  <div class="card"><h3 class="lime">Imagine a prototype team</h3><p>One person builds login. Another builds the dashboard. A third fixes API validation. They need independent work areas.</p><div class="pillrow"><span class="tag">main</span><span class="tag">feature/login</span><span class="tag">feature/dashboard</span><span class="tag">fix/api-validation</span></div></div>
+  <div class="card"><h3 class="cyan">Branching diagram</h3><div class="branchviz">
+   <div class="lane"><label>main</label><span class="commit">A</span><span class="line"></span><span class="commit">B</span><span class="line"></span><span class="commit merged">M</span></div>
+   <div class="lane"><label>login</label><span style="width:105px"></span><span class="commit alt">C</span><span class="line"></span><span class="commit alt">D</span></div>
+   <div class="lane"><label>dashboard</label><span style="width:105px"></span><span class="commit alt">E</span><span class="line"></span><span class="commit alt">F</span></div>
+  </div><p class="small">Conceptual view: feature branches diverge from shared history and are merged when ready.</p></div>
+ </div>
+</section>
+
+<section class="slide" data-title="Branch commands" data-notes="Use git switch -c feature/login to create and switch. git branch lists branches. git switch main returns to main. Merge while on the target branch: switch main, then git merge feature/login. Delete after merge with git branch -d feature/login.">
+ <div class="topline"></div><div class="kicker">Branch commands</div><h2>Create, switch, merge, clean up</h2>
+ <pre>git branch                         # list local branches
+git switch -c feature/login        # create + switch
+# edit and commit your feature
+git switch main                    # return to target branch
+git merge feature/login            # bring feature into main
+git branch -d feature/login        # delete merged branch</pre>
+ <div class="grid3">
+  <div class="card"><h3 class="lime">Create</h3><p><code>git switch -c name</code></p><p>Starts a new line of work from your current commit.</p></div>
+  <div class="card"><h3 class="cyan">Switch</h3><p><code>git switch main</code></p><p>Moves your working directory to another branch.</p></div>
+  <div class="card"><h3 class="lime">Merge</h3><p><code>git merge name</code></p><p>Combines the named branch into the branch you are currently on.</p></div>
+ </div>
+ <div class="callout">The order matters: <strong>switch to the branch that should receive the work, then merge the feature branch into it.</strong></div>
+</section>
+
+<section class="slide" data-title="Merge conflict" data-notes="A conflict happens when Git cannot safely decide how to combine changes, often because two branches changed overlapping lines. It is not a disaster. Open the file, decide the correct combined content, remove markers, save, git add the file, and complete the merge commit if Git requires one.">
+ <div class="topline"></div><div class="kicker">When Git needs a human decision</div><h2>Merge conflicts are not project failures</h2>
+ <div class="grid2">
+  <div><h3>What a conflict looks like</h3><pre><<<<<<< HEAD
+const title = "Patient Dashboard";
+=======
+const title = "Health Records";
+>>>>>>> feature/records</pre><p>Git is showing two competing edits to the same section.</p></div>
+  <div class="card"><h3 class="lime">How to resolve it</h3><ol><li>Open the conflicted file.</li><li>Choose or combine the correct lines.</li><li>Delete conflict markers.</li><li>Save the file.</li><li>Run <code>git add filename</code>.</li><li>Complete the merge commit if prompted.</li></ol></div>
+ </div>
+ <div class="callout">Talk to the other developer if the correct answer is unclear. Git can detect overlapping edits; it cannot understand your product requirements.</div>
+</section>
+
+<section class="slide" data-title="Remote repositories" data-notes="A remote is a named address for another repository. origin is only a conventional nickname, not a special Git command. A local repo can have several remotes. git remote -v shows the URLs.">
+ <div class="topline"></div><div class="kicker">Phase 3 · Connect to GitHub</div><h2>Local repository vs remote repository</h2>
+ <div class="diagram"><div class="node"><h3>Your laptop</h3><p class="small">Local commits</p><span class="tag">git push</span><span class="tag">git pull</span></div><div class="arrow">⇄</div><div class="node"><h3>GitHub server</h3><p class="small">Remote commits shared with the team</p><span class="tag">origin</span></div></div>
+ <div class="grid2">
+  <div class="card"><h3 class="lime">Remote</h3><p>A saved name and URL pointing to another copy of the repository. The common name is <code>origin</code>.</p><pre>git remote -v</pre></div>
+  <div class="card"><h3 class="cyan">Why connect?</h3><p>Back up work, share code, review contributions, and coordinate with other developers.</p><p><strong>Local commits remain local</strong> until pushed to a remote.</p></div>
+ </div>
+</section>
+
+<section class="slide" data-title="Clone and sync" data-notes="Clone downloads a repository and creates a local working copy. Fetch downloads remote updates but does not merge them into your current branch. Pull is broadly fetch plus integrate (merge or rebase depending on configuration). Push sends local commits to the remote.">
+ <div class="topline"></div><div class="kicker">The sync commands</div><h2>Clone · Fetch · Pull · Push</h2>
+ <table class="table">
+  <tr><th>Command</th><th>Plain meaning</th><th>Direction</th></tr>
+  <tr><td><code>git clone URL</code></td><td>Download a repository and set it up locally</td><td>GitHub → laptop</td></tr>
+  <tr><td><code>git fetch</code></td><td>Check/download remote updates without integrating them</td><td>GitHub → local metadata</td></tr>
+  <tr><td><code>git pull</code></td><td>Fetch and integrate remote updates into current branch</td><td>GitHub → current branch</td></tr>
+  <tr><td><code>git push</code></td><td>Send your local commits to the remote</td><td>Laptop → GitHub</td></tr>
+ </table>
+ <div class="callout">Before starting work, a safe habit is to switch to the correct branch and pull the latest shared changes. Before pushing, check status and commit history.</div>
+</section>
+
+<section class="slide" data-title="Connect a new project" data-notes="Two common routes: create an empty repo on GitHub then add it as a remote; or use GitHub's create repository flow. Avoid initializing with a README on GitHub if you already have local commits unless you know how to reconcile histories. For first push use -u to set upstream tracking.">
+ <div class="topline"></div><div class="kicker">First upload · Existing local project</div><h2>Connect your project to GitHub</h2>
+ <ol>
+  <li>Create a new repository on GitHub. Choose public or private. For an existing local project, leave README/.gitignore/license unchecked to avoid an unrelated initial commit.</li>
+  <li>Copy the repository URL, then run:</li>
+ </ol>
+ <pre>git remote add origin https://github.com/USERNAME/REPOSITORY.git
+git remote -v
+git push -u origin main</pre>
+ <div class="grid2">
+  <div class="card"><h3 class="lime">What is <code>-u</code>?</h3><p>It sets the upstream branch. Later you can usually run <code>git push</code> and <code>git pull</code> without repeating the remote and branch.</p></div>
+  <div class="card"><h3 class="cyan">Authentication</h3><p>Use GitHub's browser sign-in / credential manager or configure SSH keys. GitHub account passwords are not accepted for ordinary Git HTTPS authentication.</p><p><a href="https://docs.github.com/en/authentication" target="_blank" style="color:var(--cyan)">GitHub authentication guide ↗</a></p></div>
+ </div>
+</section>
+
+<section class="slide" data-title="GitHub flow" data-notes="Explain the standard loop: update main, create feature branch, make focused commits, push branch, open PR, review, address feedback, checks pass, merge. Do not encourage everyone to push directly to main on a shared project.">
+ <div class="topline"></div><div class="kicker">How teams work</div><h2>The Pull Request workflow</h2>
+ <div class="diagram">
+  <div class="node"><strong>1. Branch</strong><p class="small">Create feature branch</p></div><div class="arrow">→</div>
+  <div class="node"><strong>2. Commit</strong><p class="small">Build and save changes</p></div><div class="arrow">→</div>
+  <div class="node"><strong>3. Push</strong><p class="small">Upload branch</p></div>
+ </div>
+ <div class="diagram">
+  <div class="node"><strong>4. Pull Request</strong><p class="small">Ask to merge</p></div><div class="arrow">→</div>
+  <div class="node"><strong>5. Review</strong><p class="small">Discuss and test</p></div><div class="arrow">→</div>
+  <div class="node"><strong>6. Merge</strong><p class="small">Integrate into main</p></div>
+ </div>
+ <div class="callout"><strong>A Pull Request is a conversation around a proposed change.</strong> It is not the same as <code>git pull</code>.</div>
+</section>
+
+<section class="slide" data-title="Issues and forks" data-notes="Issue: record a bug, task, question, or idea. Include expected vs actual behaviour, steps to reproduce, screenshots/logs without sensitive data, and acceptance criteria. Fork: your own GitHub copy of someone else's repository, useful when you do not have write access. Clone your fork, add upstream remote, branch, push to fork, open PR to original project.">
+ <div class="topline"></div><div class="kicker">Organising contributions</div><h2>Issues, forks, and open source</h2>
+ <div class="grid2">
+  <div class="card"><h3 class="lime">GitHub Issues</h3><p>Think of an Issue as a work ticket.</p><ul><li>Bug: login button does nothing.</li><li>Feature: add a patient search filter.</li><li>Task: write API setup instructions.</li></ul><p>Use labels, assignees, milestones, and checklists to clarify ownership and progress.</p></div>
+  <div class="card"><h3 class="cyan">Forking</h3><p>A fork is your GitHub-side copy of another person's repository.</p><ol><li>Fork the project.</li><li>Clone your fork.</li><li>Create a branch and make changes.</li><li>Push to your fork.</li><li>Open a Pull Request to the original project.</li></ol></div>
+ </div>
+ <div class="callout">Before contributing, read the project's README and CONTRIBUTING guide. Follow its code style, tests, and communication expectations.</div>
+</section>
+
+<section class="slide" data-title="Undo mistakes" data-notes="Be careful: restore discards working-tree changes; reset moves branch pointers and can discard staged/committed work depending on mode; revert creates a new commit that reverses an earlier commit and is safer for shared history; reflog records where HEAD and branch refs have recently pointed. Always inspect status and consider a backup branch before destructive operations.">
+ <div class="topline"></div><div class="kicker">Phase 4 · Safety nets</div><h2>Undoing mistakes without panic</h2>
+ <table class="table">
+  <tr><th>Command</th><th>What it does</th><th>Risk / use</th></tr>
+  <tr><td><code>git restore file</code></td><td>Discard unstaged edits in a file</td><td style="color:var(--yellow)">Destructive to those edits</td></tr>
+  <tr><td><code>git restore --staged file</code></td><td>Unstage a file but keep its edits</td><td>Usually safe</td></tr>
+  <tr><td><code>git revert COMMIT</code></td><td>Create a new commit that reverses an earlier commit</td><td class="lime">Good for shared history</td></tr>
+  <tr><td><code>git reset --soft HEAD~1</code></td><td>Move branch back one commit, keep changes staged</td><td style="color:var(--yellow)">Changes history</td></tr>
+  <tr><td><code>git reflog</code></td><td>Show recent movements of HEAD/branch refs</td><td>Can help recover lost work</td></tr>
+ </table>
+ <div class="callout"><strong>Do not run commands you do not understand</strong>, especially <code>reset --hard</code> or force-push on shared branches. Ask what will be lost first.</div>
+</section>
+
+<section class="slide" data-title="Stash rebase" data-notes="Stash temporarily shelves tracked changes so you can switch tasks. Rebase replays commits onto a new base, creating a cleaner linear history but rewriting commit IDs. Avoid rebasing commits already shared with teammates unless the team explicitly agrees. Squashing combines several commits into one.">
+ <div class="topline"></div><div class="kicker">More useful workflows</div><h2>Stash, rebase, and squash</h2>
+ <div class="grid3">
+  <div class="card"><h3 class="lime">Stash</h3><p>Temporarily put unfinished changes aside.</p><pre>git stash
+git switch main
+git stash pop</pre><p>Like putting your current desk work in a drawer.</p></div>
+  <div class="card"><h3 class="cyan">Rebase</h3><p>Replay your branch commits on top of a newer base.</p><pre>git switch feature/login
+git rebase main</pre><p>Can make history more linear; may require conflict resolution.</p></div>
+  <div class="card"><h3 class="lime">Squash</h3><p>Combine several small commits into one meaningful commit, often during PR merge.</p><pre>git rebase -i HEAD~3</pre><p>Useful for tidying noisy history before sharing.</p></div>
+ </div>
+ <div class="callout">Team rule: do not rewrite shared history casually. Prefer a normal merge or ask the team before rebasing published commits.</div>
+</section>
+
+<section class="slide" data-title="Actions and Pages" data-notes="GitHub Actions runs workflows defined in .github/workflows YAML files. Examples: install dependencies, run tests, lint, build, deploy. GitHub Pages hosts static sites such as documentation or portfolio pages. It is not a general backend host for Node APIs.">
+ <div class="topline"></div><div class="kicker">GitHub extras</div><h2>Automation and publishing</h2>
+ <div class="grid2">
+  <div class="card"><h3 class="lime">GitHub Actions</h3><p>Automates repeated project checks when code changes.</p><pre>Code pushed
+    ↓
+Install dependencies
+    ↓
+Run lint + tests
+    ↓
+Build application
+    ↓
+Report pass / fail</pre><p>Useful for catching errors before merging.</p></div>
+  <div class="card"><h3 class="cyan">GitHub Pages</h3><p>Publishes static websites from a repository.</p><ul><li>Portfolio sites</li><li>Project documentation</li><li>Static demos and club resources</li></ul><p>For a backend API or full-stack app, use a suitable application host instead.</p></div>
+ </div>
+</section>
+
+<section class="slide" data-title="Security and teamwork" data-notes="For health projects especially, never commit real patient data, credentials, private keys, or production database dumps. Use synthetic demo data. Add branch protection rules and require PR review/status checks for main where available. Enable 2FA. Least privilege: give collaborators only the access they need.">
+ <div class="topline"></div><div class="kicker">Responsible collaboration</div><h2>Protect the project and the people in it</h2>
+ <div class="grid2">
+  <div class="card"><h3 style="color:var(--red)">Never commit</h3><ul><li>Passwords, API keys, tokens, SSH private keys.</li><li>Real patient records or identifiable health data.</li><li>Production database backups.</li><li>Private documents without permission.</li></ul></div>
+  <div class="card"><h3 class="lime">Do instead</h3><ul><li>Use <code>.env</code> and secret storage.</li><li>Commit an <code>.env.example</code> with placeholder values.</li><li>Use synthetic/sample data for demos.</li><li>Enable 2FA and review collaborator access.</li><li>Protect <code>main</code> with Pull Requests and checks.</li></ul></div>
+ </div>
+ <div class="callout">If a secret enters Git history, revoke or rotate it immediately. Deleting the line in a later commit does not make the old secret safe.</div>
+</section>
+
+<section class="slide" data-title="Team exercise" data-notes="Give learners 8–12 minutes in pairs. One person is developer A, one developer B. They should create a feature branch, commit one file, and explain how a PR would be opened. If they have Git installed, use their own terminal. Otherwise use the simulator from the earlier slide.">
+ <div class="topline"></div><div class="kicker">Guided practice · 10 minutes</div><h2>Mini challenge: the club prototype repo</h2>
+ <div class="card">
+  <h3 class="lime">Scenario</h3><p>Your team is building a health appointment prototype. You are assigned the README and another developer is assigned the login page.</p>
+  <ol>
+   <li>Create a folder called <code>hric-prototype</code> and enter it.</li>
+   <li>Initialise Git and create <code>README.md</code>.</li>
+   <li>Write a one-line project description.</li>
+   <li>Check status, stage the README, and commit it.</li>
+   <li>Create and switch to <code>feature/readme-setup</code>.</li>
+   <li>Make another edit, commit it, and explain how you would push and open a PR.</li>
+  </ol>
+ </div>
+ <div class="callout"><strong>Challenge questions:</strong> What is local at this point? What would need to happen before a teammate can see the commit? Why not work directly on main?</div>
+</section>
+
+<section class="slide" data-title="Knowledge check" data-notes="Ask learners to answer before revealing feedback. Use the questions to identify misunderstandings: add vs commit, Git vs GitHub, branch merge direction, pull request vs pull, and secrets in private repositories.">
+ <div class="topline"></div><div class="kicker">Check your understanding</div><h2>Quick knowledge check</h2>
+ <div class="card">
+  <div id="qnum" class="kicker">QUESTION 1 OF 5</div><h3 id="question">Which command records staged changes in local Git history?</h3>
+  <div id="options"></div><div class="feedback" id="feedback"></div>
+  <div style="display:flex;justify-content:space-between;margin-top:10px"><button class="action secondary" onclick="prevQ()">Previous</button><button class="action" onclick="nextQ()">Next question</button></div>
+ </div>
+</section>
+
+<section class="slide" data-title="Cheat sheet" data-notes="Leave this slide up for learners to take a screenshot. Remind them that they should use git status often and read error messages carefully.">
+ <div class="topline"></div><div class="kicker">Keep this nearby</div><h2>Git quick-reference sheet</h2>
+ <div class="grid2">
+  <div><h3 class="lime">Start and save</h3><pre>git init
+git status
+git add .
+git commit -m "Describe change"
+git log --oneline
+git diff</pre><h3 class="cyan">Branches</h3><pre>git branch
+git switch -c feature/name
+git switch main
+git merge feature/name</pre></div>
+  <div><h3 class="lime">GitHub sync</h3><pre>git clone URL
+git remote -v
+git remote add origin URL
+git fetch
+git pull
+git push -u origin main</pre><h3 class="cyan">Recover / tidy</h3><pre>git restore file
+git restore --staged file
+git revert COMMIT
+git stash
+git stash pop
+git reflog</pre></div>
+ </div>
+ <div class="callout">When uncertain: pause → run <code>git status</code> → inspect the change → understand the command before executing it.</div>
+</section>
+
+<section class="slide" data-title="Closing" data-notes="Close by asking each learner to state one command and what it does. Encourage them to create a small repository and practise with a README rather than learning by memorising. Share the official Git and GitHub learning links.">
+ <div class="topline"></div><div class="kicker">From stethoscope to algorithm</div><h2>Build together. Track the journey.</h2>
+ <p class="subtitle">Good collaboration is a habit, not a command.</p>
+ <div class="grid3" style="margin-top:24px">
+  <div class="card"><h3 class="lime">Practise</h3><p>Create a small repo and make three meaningful commits.</p></div>
+  <div class="card"><h3 class="cyan">Collaborate</h3><p>Use a branch and Pull Request for your next team task.</p></div>
+  <div class="card"><h3 class="lime">Contribute</h3><p>Read another project's README, open an Issue, or make a small contribution.</p></div>
+ </div>
+ <div class="card" style="margin-top:20px"><h3>Helpful learning resources</h3>
+  <p><a href="https://git-scm.com/book/en/v2" target="_blank" style="color:var(--cyan)">Pro Git book</a> · <a href="https://docs.github.com/en/get-started" target="_blank" style="color:var(--cyan)">GitHub Getting Started</a> · <a href="https://learngitbranching.js.org/" target="_blank" style="color:var(--cyan)">Learn Git Branching (interactive)</a> · <a href="https://roadmap.sh/git-github" target="_blank" style="color:var(--cyan)">Git & GitHub roadmap</a></p>
+ </div>
+ <div class="speaker">DEKUT HEALTH RESEARCH & INNOVATION CLUB</div>
+</section>
+
+</div>
+<div class="nav"><button class="secondary" id="prev" onclick="move(-1)">← Back</button><button id="next" onclick="move(1)">Next →</button></div>
+<div class="progress" id="progress"></div>
+<div class="presenter" id="notes"><h4>Presenter notes</h4><div id="noteText">Use the notes to guide the discussion.</div></div>
+<script>
+const slides=[...document.querySelectorAll('.slide')];let index=0;
+function show(n){index=Math.max(0,Math.min(slides.length-1,n));slides.forEach((s,i)=>s.classList.toggle('active',i===index));document.getElementById('counter').textContent=String(index+1).padStart(2,'0')+' / '+String(slides.length).padStart(2,'0');document.getElementById('progress').style.width=((index+1)/slides.length*100)+'%';document.getElementById('prev').disabled=index===0;document.getElementById('next').disabled=index===slides.length-1;document.getElementById('noteText').textContent=slides[index].dataset.notes||'No notes for this slide.';document.title=(slides[index].dataset.title||'Git & GitHub')+' — Git & GitHub';}
+function move(d){show(index+d)}function toggleNotes(){document.getElementById('notes').classList.toggle('show')}
+function toggleOverview(){let list=slides.map((s,i)=>(i+1)+'. '+s.dataset.title).join('\n');alert('SLIDE OVERVIEW\n\n'+list)}
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();move(1)}if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();move(-1)}if(e.key==='Home')show(0);if(e.key==='End')show(slides.length-1);if(e.key.toLowerCase()==='n')toggleNotes()});
+show(0);
+
+// Teaching terminal: a deliberately small, safe shell/Git simulation.
+let fs={'~':{type:'dir'}}, cwd='~', repo=false, staged=[], commits=[], changes={}, branches=['main'], branch='main', history=[];
+function pathJoin(base,name){if(name.startsWith('/'))return name;if(base==='~')return '~/'+name;return base+'/'+name}
+function norm(p){let a=[];p.split('/').forEach(x=>{if(!x||x==='.')return;if(x==='..')a.pop();else a.push(x)});return '~'+(a.length?'/'+a.join('/'):'')}
+function current(){return cwd}
+function out(s){let el=document.getElementById('termout');el.innerHTML+=`<div>${escapeHtml(s).replace(/\n/g,'<br>')}</div>`;el.scrollTop=el.scrollHeight}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function updatePrompt(){document.getElementById('prompt').textContent=cwd+' $';document.getElementById('termPath').textContent=cwd}
+function runCmd(){let input=document.getElementById('cmd'),raw=input.value.trim();if(!raw)return;input.value='';out('<span style="color:#a8cf32">'+cwd+' $ '+raw+'</span>');history.push(raw);let parts=raw.match(/(?:[^\s"]+|"[^"]*")+/g)||[],cmd=parts.shift(),args=parts.map(x=>x.replace(/^"|"$/g,''));let here=cwd;
+const fileAt=(p)=>fs[norm(p)];
+switch(cmd){
+case 'help':out('Commands: pwd, ls, mkdir NAME, cd PATH, touch FILE, echo TEXT > FILE, cat FILE, git init, git status, git add FILE|., git commit -m "message", git log --oneline, git branch, git switch -c NAME, git switch NAME, git merge NAME, clear');break;
+case 'pwd':out(cwd.replace('~','/home/learner'));break;
+case 'ls':{let names=Object.keys(fs).filter(p=>p!==cwd&&p.startsWith(cwd==='~'?'~/':cwd+'/')).map(p=>p.slice((cwd==='~'?'~/':cwd+'/').length).split('/')[0]);out([...new Set(names)].join('  ')||'(empty folder)');break}
+case 'mkdir':if(!args[0])out('mkdir: missing folder name');else{let p=pathJoin(cwd,args[0]);if(fs[p])out('mkdir: already exists');else{fs[p]={type:'dir'};out('Created directory '+args[0])}}break;
+case 'cd':{let dest=args[0]||'~',p=dest==='~'?'~':norm(dest.startsWith('~')?dest:pathJoin(cwd,dest));if(fs[p]?.type==='dir'){cwd=p;updatePrompt()}else out('cd: folder not found: '+dest);break}
+case 'touch':if(!args[0])out('touch: missing file name');else{let p=pathJoin(cwd,args[0]);fs[p]??={type:'file',content:''};if(repo)changes[p]=true;out('Created/updated '+args[0])}break;
+case 'echo':{let rawText=raw.slice(5),m=rawText.match(/^(.*?)\s*>\s*(.+)$/);if(!m){out('Usage: echo text > filename');break}let content=m[1].replace(/^["']|["']$/g,''),p=pathJoin(cwd,m[2].trim());fs[p]={type:'file',content:content};if(repo)changes[p]=true;out('Wrote content to '+m[2].trim());break}
+case 'cat':{let p=pathJoin(cwd,args[0]||'');if(fs[p]?.type==='file')out(fs[p].content||'(empty file)');else out('cat: file not found');break}
+case 'clear':document.getElementById('termout').innerHTML='';break;
+case 'git':
+switch(args[0]){
+case 'init':repo=true;out('Initialized empty Git repository in '+cwd+'/.git/');break;
+case 'status':if(!repo){out('fatal: not a git repository');break}let unstaged=Object.keys(changes).filter(p=>!staged.includes(p));out('On branch '+branch+'\n'+(staged.length?'Changes to be committed:\n  '+staged.join('\n  '):'No changes staged.')+(unstaged.length?'\nUntracked/modified files:\n  '+unstaged.join('\n  '):'')+(!staged.length&&!unstaged.length?'\nWorking tree clean.':''));break;
+case 'add':if(!repo){out('fatal: not a git repository');break}if(args[1]==='.'){staged=[...new Set([...staged,...Object.keys(changes)])];out('Staged all current project changes.')}else if(args[1]){let p=pathJoin(cwd,args[1]);if(fs[p]){staged=[...new Set([...staged,p])];changes[p]=true;out('Staged '+args[1])}else out('pathspec did not match any files')}else out('Usage: git add FILE or git add .');break;
+case 'commit':if(!repo){out('fatal: not a git repository');break}if(!staged.length){out('nothing to commit (use "git add" to stage changes)');break}let msg=raw.match(/-m\s+"([^"]+)"/)?.[1]||raw.match(/-m\s+'([^']+)'/)?.[1]||'demo commit';commits.push({msg,files:[...staged],branch});staged=[];changes={};out('['+branch+' '+String(commits.length).padStart(4,'0')+'] '+msg+'\n '+commits[commits.length-1].files.length+' file(s) changed');break;
+case 'log':if(!commits.length)out('No commits yet');else out(commits.slice().reverse().map((c,i)=>'commit demo'+(commits.length-i)+' ('+c.branch+')\n    '+c.msg).join('\n'));break;
+case 'branch':out(branches.join('\n')+(args[1]==='-d'?'\n(Delete simulated only when branch is not current)':''));break;
+case 'switch':if(args[1]==='-c'&&args[2]){branches.push(args[2]);branch=args[2];out('Switched to a new branch "'+branch+'"')}else if(branches.includes(args[1])){branch=args[1];out('Switched to branch "'+branch+'"')}else out('error: branch not found. Try git switch -c NAME');break;
+case 'merge':if(branches.includes(args[1])){out('Simulated merge of '+args[1]+' into '+branch+'. In real Git, conflicts may need manual resolution.')}else out('merge: branch not found');break;
+default:out('git: unknown or unsupported demo command. Type help.')}
+break;
+default:out('command not found: '+cmd+' · type help');
+}
+updatePrompt()}
+function quick(s){document.getElementById('cmd').value=s;runCmd()}
+function resetTerm(){fs={'~':{type:'dir'}};cwd='~';repo=false;staged=[];commits=[];changes={};branches=['main'];branch='main';document.getElementById('termout').innerHTML='Demo reset. Try <b>pwd</b>, then <b>mkdir health-app</b>.';updatePrompt()}
+document.getElementById('cmd').addEventListener('keydown',e=>{if(e.key==='Enter')runCmd()});
+
+// Knowledge check
+const questions=[
+ {q:'Which command records staged changes in local Git history?',a:['git add','git commit','git push','git status'],c:1,e:'git commit creates a local snapshot from the staged changes.'},
+ {q:'Which statement is correct?',a:['GitHub is required for Git to work','Git is the hosting website','Git works locally; GitHub hosts repositories and adds collaboration tools','A commit automatically uploads code'],c:2,e:'Git can track a project entirely offline. GitHub is one place to host and collaborate.'},
+ {q:'You want to create and move to a new feature branch. Which command?',a:['git branch --delete feature','git switch -c feature/login','git merge feature/login','git pull feature/login'],c:1,e:'git switch -c creates the branch and switches to it.'},
+ {q:'What is a Pull Request?',a:['A command that downloads code','A proposal to review and merge changes','A backup of your laptop','A private repository'],c:1,e:'A PR is a review and discussion process around proposed changes.'},
+ {q:'You committed an API key to a private repository. What should you do?',a:['Do nothing; it is private','Only delete the line in the next commit','Revoke/rotate the key and remove it safely from use/history as appropriate','Make the repository public'],c:2,e:'Treat committed secrets as exposed. Rotate/revoke them; private visibility is not a secret vault.'}
+];let qi=0,answered={};
+function renderQ(){let q=questions[qi];document.getElementById('qnum').textContent='QUESTION '+(qi+1)+' OF '+questions.length;document.getElementById('question').textContent=q.q;let opts=document.getElementById('options');opts.innerHTML='';q.a.forEach((a,i)=>{let b=document.createElement('button');b.className='quizopt';b.textContent=String.fromCharCode(65+i)+'. '+a;b.onclick=()=>answer(i);opts.appendChild(b)});document.getElementById('feedback').textContent=answered[qi]===undefined?'':(answered[qi]===q.c?'Correct. ':'Not quite. ')+q.e}
+function answer(i){answered[qi]=i;renderQ()}function nextQ(){qi=(qi+1)%questions.length;renderQ()}function prevQ(){qi=(qi+questions.length-1)%questions.length;renderQ()}renderQ();
+</script>
+</body></html>
